@@ -27,10 +27,9 @@ export async function checkAndUpdateNotices() {
     for (const notice of newNotices) {
       if (!processedUrls.has(notice.url)) {
         processedUrls.add(notice.url);
-        const existingNotice = await noticeService.getNoticeByTitleAndUrl(notice.title, notice.url);
-        if (!existingNotice) {
-          const createdNotice = await noticeService.createNotice(notice);
-          console.log('Created notice:', JSON.stringify(createdNotice, null, 2));
+        const createdNotice = await noticeService.upsertNotice(notice);
+
+        if (createdNotice) {
           updatedCount++;
         }
       }
