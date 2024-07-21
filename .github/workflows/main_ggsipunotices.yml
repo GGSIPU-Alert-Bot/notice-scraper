@@ -30,8 +30,8 @@ jobs:
       - name: List files
         run: ls -la
 
-      - name: Zip artifact for deployment
-        run: zip release.zip .
+      - name: Create deployment package
+        run: apack "$@".zip "$@"  
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
