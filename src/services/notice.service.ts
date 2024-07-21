@@ -1,67 +1,104 @@
 import prisma from '../config/database';
 import { Notice } from '../models/notice.model';
+import { Prisma } from '@prisma/client';
 
 export async function getLatestNotices(limit: number = 10): Promise<Notice[]> {
   return prisma.notice.findMany({
     take: limit,
-    orderBy: { createdAt: 'desc' },
+    orderBy: { date: 'desc' },
   });
 }
 
-export async function createNotice(notice: Notice): Promise<Notice> {
-  return prisma.notice.create({
-    data: notice,
+export async function getLatestNoticeDate(): Promise<string> {
+  const latestNotice = await prisma.notice.findFirst({
+    orderBy: { date: 'desc' },
+    select: { date: true },
   });
+  return latestNotice ? latestNotice.date : '01/01/2024'; // fallback date if no notices exist
 }
 
-export async function getNoticeByTitleAndUrl(title: string, url: string): Promise<Notice[] | null> {
-  console.log(`Checking for existing notice with title: ${title}, url: ${url}`);
+export async function getNoticesSinceDate(date: string): Promise<Notice[]> {
   return prisma.notice.findMany({
     where: {
-      AND: [
-        { title: title },
-        { url: url }
-      ]
-    }
+      date: {
+        gte: date,
+      },
+    },
+    orderBy: { date: 'desc' },
   });
 }
 
-export async function deleteNoticesByIds(ids: number[]): Promise<void> {
-  await prisma.notice.deleteMany({
-    where: {
-      id: {
-        in: ids
+export async function batchUpsertNotices(notices: Notice[]): Promise<{ created: number, updated: number,total: number }> {
+  let totalAffected = 0;
+  let totalProcessed = 0;
+
+
+  const batchSize = 5000; // based on your database capabilities
+  const totalNotices = notices.length;
+
+  console.log(`Starting to process ${totalNotices} notices`);
+
+
+  for (let i = 0; i < notices.length; i += batchSize) {
+    const batch = notices.slice(i, i + batchSize);
+
+    try {
+      // Deduplicate notices within the batch
+      const uniqueNotices = deduplicateNotices(batch);
+
+      const values = uniqueNotices.map(notice => 
+        Prisma.sql`(${notice.title}, ${notice.url}, ${notice.date})`
+      );
+
+      const query = Prisma.sql`
+        INSERT INTO "Notice" (title, url, date)
+        VALUES ${Prisma.join(values)}
+        ON CONFLICT (title, url) DO UPDATE SET
+          date = EXCLUDED.date
+        WHERE "Notice".date <> EXCLUDED.date
+      `;
+
+      const affected = await prisma.$executeRaw(query);
+
+      totalAffected += affected;
+      totalProcessed += batch.length;
+
+      const progress = (totalProcessed / totalNotices * 100).toFixed(2);
+      console.log(`Processed ${totalProcessed} of ${totalNotices} notices (${progress}%). Affected in this batch: ${affected}`);
+
+    } catch (error) {
+      console.error(`Error processing batch starting at index ${i}:`, error);
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        console.error('Prisma error details:', error.message);
       }
+      // throw error;
     }
-  });
-  console.log(`Deleted notices with ids: ${ids}`)
+  }
+
+  // Since we can't distinguish between inserts and updates easily,
+  // we'll return the total affected rows as 'created' for simplicity
+  console.log(`Finished processing all ${totalNotices} notices. Total affected: ${totalAffected}`);
+
+  return { created: totalAffected, updated: 0 ,total: totalNotices};
 }
 
-export async function upsertNotice(notice: Notice): Promise<Notice | null> {
-  const existingNotices = await getNoticeByTitleAndUrl(notice.title, notice.url);
+function deduplicateNotices(notices: Notice[]): Notice[] {
+  const uniqueNotices = new Map<string, Notice>();
+  let duplicatesCount = 0;
 
-  if (existingNotices && existingNotices.length > 1) {
-    // Delete all but one
-    const idsToDelete = existingNotices.slice(1).map(n => n.id).filter((id): id is number => id !== undefined);
-    await deleteNoticesByIds(idsToDelete);
-    console.log(`Deleted ${idsToDelete.length} duplicate notices`);
-    console.log('\n')
-    console.log('\n')
-    console.log('\n')
-    console.log('\n')
-    console.log('\n')
-    console.log('\n')
-    console.log('\n')
-  }
 
-  if (!existingNotices || existingNotices.length === 0) {
-    const createdNotice = await prisma.notice.create({
-      data: notice,
-    });
-    console.log('Created notice:', JSON.stringify(createdNotice, null, 2));
-    return createdNotice;
-  } else {
-    console.log('Notice already exists:', JSON.stringify(existingNotices[0], null, 2));
-    return null;
+  for (const notice of notices) {
+    const key = `${notice.title}|${notice.url}`;
+    if (!uniqueNotices.has(key) || notice.date > uniqueNotices.get(key)!.date) {
+      if (uniqueNotices.has(key)) {
+        duplicatesCount++;
+      }
+      uniqueNotices.set(key, notice);
+    }else {
+      duplicatesCount++;
+    }
   }
+  console.log(`Found ${duplicatesCount} duplicates in batch of ${notices.length} notices`);
+
+  return Array.from(uniqueNotices.values());
 }

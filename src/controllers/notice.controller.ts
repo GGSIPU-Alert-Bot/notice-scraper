@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import * as noticeService from '../services/notice.service';
 import { scrapNotices } from '../utils/scraper';
+import { Notice } from '../models/notice.model';
+
 
 export async function getLatestNotices(req: Request, res: Response) {
   try {
@@ -13,34 +15,38 @@ export async function getLatestNotices(req: Request, res: Response) {
 
 export async function checkAndUpdateNotices() {
   try {
-    const newNotices = await scrapNotices();
-    console.log(`Scraped ${newNotices.length} notices`);
+    console.log('Starting notice scraping and update process');
+    const scrapedNotices = await scrapNotices();
+    console.log(`Scraped ${scrapedNotices.length} notices`);
 
-    if (newNotices.length === 0) {
-      console.log('No notices found by scraper. Skipping database update.');
+    const latestDate = await noticeService.getLatestNoticeDate();
+    const recentDbNotices = await noticeService.getNoticesSinceDate(latestDate);
+    const newOrUpdatedNotices = filterNewOrUpdatedNotices(scrapedNotices, recentDbNotices);
+
+    if (newOrUpdatedNotices.length === 0) {
+      console.log('No new or updated notices found. Skipping database update.');
       return;
     }
 
-    let updatedCount = 0;
-    const processedUrls = new Set();
-
-    for (const notice of newNotices) {
-      if (!processedUrls.has(notice.url)) {
-        processedUrls.add(notice.url);
-        const createdNotice = await noticeService.upsertNotice(notice);
-
-        if (createdNotice) {
-          updatedCount++;
-        }
-      }
-    }
-
-    if (updatedCount > 0) {
-      console.log(`Database updated with ${updatedCount} new notices.`);
-    } else {
-      console.log('No new notices found.');
-    }
+    console.log(`Found ${newOrUpdatedNotices.length} new or updated notices. Proceeding with database update.`);
+    const result = await noticeService.batchUpsertNotices(newOrUpdatedNotices);
+    console.log(`Notice processing completed. Created/Updated: ${result.created}, Total processed: ${result.total}`);
   } catch (error) {
     console.error('Error checking and updating notices:', error);
   }
+}
+
+
+function filterNewOrUpdatedNotices(scrapedNotices: Notice[], recentDbNotices: Notice[]): Notice[] {
+  const dbNoticeSet = new Set(recentDbNotices.map(notice => `${notice.date}|${notice.title}|${notice.url}`));
+
+  return scrapedNotices.filter(notice => {
+    const noticeKey = `${notice.date}|${notice.title}|${notice.url}`;
+    return !dbNoticeSet.has(noticeKey);
+  });
+}
+
+function parseCustomDate(dateString: string): Date {
+  const [day, month, year] = dateString.split('/').map(Number);
+  return new Date(year, month - 1, day); // month is 0-indexed in JavaScript Date
 }

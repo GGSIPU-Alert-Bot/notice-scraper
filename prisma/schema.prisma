@@ -19,4 +19,6 @@ model Notice {
   title     String
   url       String
   createdAt DateTime @default(now())
+
+  @@unique([title, url])
 }
