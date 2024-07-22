@@ -2,10 +2,9 @@ import prisma from '../config/database';
 import { Notice } from '../models/notice.model';
 import { Prisma } from '@prisma/client';
 
-export async function getLatestNotices(limit: number = 10): Promise<Notice[]> {
+export async function getLatestNotices(): Promise<Notice[]> {
   try {
     const notices = await prisma.notice.findMany({
-      take: limit,
       orderBy: { date: 'desc' },
     });
 

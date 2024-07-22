@@ -19,10 +19,9 @@ exports.batchUpsertNotices = batchUpsertNotices;
 const database_1 = __importDefault(require("../config/database"));
 const client_1 = require("@prisma/client");
 function getLatestNotices() {
-    return __awaiter(this, arguments, void 0, function* (limit = 10) {
+    return __awaiter(this, void 0, void 0, function* () {
         try {
             const notices = yield database_1.default.notice.findMany({
-                take: limit,
                 orderBy: { date: 'desc' },
             });
             // Normalize dates before returning
