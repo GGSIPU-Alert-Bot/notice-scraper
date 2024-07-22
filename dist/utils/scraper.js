@@ -15,12 +15,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.scrapNotices = scrapNotices;
 const axios_1 = __importDefault(require("axios"));
 const cheerio_1 = __importDefault(require("cheerio"));
+function encodeSpacesInURL(url) {
+    return url.replace(/ /g, '%20');
+}
 function extractDateFromUrl(url) {
     // Hardcoded date handling for the specific URL
     if (url === 'http://www.ipu.ac.in/Pubinfo2024/formhost2425210724.pdf') {
         return '2024-07-21'; // Hardcoded date for this specific URL
     }
-    // Updated patterns to match different date formats including the one in the example URL
     const patterns = [
         /(\d{2})(\d{2})(\d{2})(\d{3})/, // Matches 200724401
         /(\d{2})(\d{2})(\d{4})/, // Matches 16072024
@@ -88,8 +90,9 @@ function parseNotices(html) {
         const downloadUrl = $a.attr('href');
         if (noticeText && downloadUrl) {
             const fullUrl = downloadUrl.startsWith('http') ? downloadUrl : `http://www.ipu.ac.in${downloadUrl}`;
+            const encodedUrl = encodeSpacesInURL(fullUrl); // Encode spaces in the full URL
             let extractedDate = extractDateFromUrl(fullUrl);
-            if (fullUrl.includes('youtube.com') || fullUrl.includes('youtu.be')) {
+            if (encodedUrl.includes('youtube.com') || encodedUrl.includes('youtu.be')) {
                 extractedDate = lastValidDate;
             }
             else if (extractedDate) {
@@ -109,7 +112,7 @@ function parseNotices(html) {
             notices.push({
                 date: extractedDate || lastValidDate || 'Unknown',
                 title: noticeText,
-                url: fullUrl
+                url: encodedUrl
             });
         }
     });

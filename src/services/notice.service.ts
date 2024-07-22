@@ -71,7 +71,7 @@ export async function batchUpsertNotices(notices: Notice[]): Promise<{ created: 
       })));
 
       const values = uniqueNotices.map(notice =>
-        Prisma.sql`(${notice.title}, ${notice.url}, ${notice.date})`
+        Prisma.sql`(${notice.title}, ${encodeURL(notice.url)}, ${notice.date})`
       );
 
       const query = Prisma.sql`
@@ -157,4 +157,8 @@ function validateAndNormalizeDate(dateString: string): string {
   }
 
   return date.toISOString().split('T')[0];
+}
+
+function encodeURL(url: string): string {
+  return url.replace(/ /g, '%20');
 }

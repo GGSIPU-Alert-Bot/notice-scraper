@@ -80,7 +80,7 @@ function batchUpsertNotices(notices) {
             try {
                 // Normalize and deduplicate notices within the batch
                 const uniqueNotices = deduplicateNotices(batch.map(notice => (Object.assign(Object.assign({}, notice), { date: validateAndNormalizeDate(notice.date) }))));
-                const values = uniqueNotices.map(notice => client_1.Prisma.sql `(${notice.title}, ${notice.url}, ${notice.date})`);
+                const values = uniqueNotices.map(notice => client_1.Prisma.sql `(${notice.title}, ${encodeURL(notice.url)}, ${notice.date})`);
                 const query = client_1.Prisma.sql `
         INSERT INTO "Notice" (title, url, date)
         VALUES ${client_1.Prisma.join(values)}
@@ -151,4 +151,7 @@ function validateAndNormalizeDate(dateString) {
         return 'Invalid date';
     }
     return date.toISOString().split('T')[0];
+}
+function encodeURL(url) {
+    return url.replace(/ /g, '%20');
 }
