@@ -3,12 +3,12 @@ import * as noticeService from '../services/notice.service';
 import { scrapNotices } from '../utils/scraper';
 import { Notice } from '../models/notice.model';
 
-
 export async function getLatestNotices(req: Request, res: Response) {
   try {
     const notices = await noticeService.getLatestNotices();
     res.json(notices);
   } catch (error) {
+    console.error('Error in getLatestNotices:', error);
     res.status(500).json({ error: 'Failed to fetch notices' });
   }
 }
@@ -36,7 +36,6 @@ export async function checkAndUpdateNotices() {
   }
 }
 
-
 function filterNewOrUpdatedNotices(scrapedNotices: Notice[], recentDbNotices: Notice[]): Notice[] {
   const dbNoticeSet = new Set(recentDbNotices.map(notice => `${notice.date}|${notice.title}|${notice.url}`));
 
@@ -44,9 +43,4 @@ function filterNewOrUpdatedNotices(scrapedNotices: Notice[], recentDbNotices: No
     const noticeKey = `${notice.date}|${notice.title}|${notice.url}`;
     return !dbNoticeSet.has(noticeKey);
   });
-}
-
-function parseCustomDate(dateString: string): Date {
-  const [day, month, year] = dateString.split('/').map(Number);
-  return new Date(year, month - 1, day); // month is 0-indexed in JavaScript Date
 }

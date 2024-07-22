@@ -43,6 +43,7 @@ function getLatestNotices(req, res) {
             res.json(notices);
         }
         catch (error) {
+            console.error('Error in getLatestNotices:', error);
             res.status(500).json({ error: 'Failed to fetch notices' });
         }
     });
@@ -75,8 +76,4 @@ function filterNewOrUpdatedNotices(scrapedNotices, recentDbNotices) {
         const noticeKey = `${notice.date}|${notice.title}|${notice.url}`;
         return !dbNoticeSet.has(noticeKey);
     });
-}
-function parseCustomDate(dateString) {
-    const [day, month, year] = dateString.split('/').map(Number);
-    return new Date(year, month - 1, day); // month is 0-indexed in JavaScript Date
 }
