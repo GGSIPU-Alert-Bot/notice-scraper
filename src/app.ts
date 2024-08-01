@@ -12,8 +12,8 @@ app.get('/', (_, res) => {
   res.json({ message: 'Welcome, Services are running!' });
 });
 
-// Cron job to run every hour starting from 8 AM to 10 PM every day.
-new CronJob('0 8-22 * * *', checkAndUpdateNotices, null, true);
+// Cron job to run at the start of every hour every day.
+new CronJob('0 * * * *', checkAndUpdateNotices, null, true);
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
