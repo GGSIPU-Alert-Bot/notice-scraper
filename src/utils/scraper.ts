@@ -11,6 +11,17 @@ function extractDateFromUrl(url: string): string | null {
   if (url === 'http://www.ipu.ac.in/Pubinfo2024/formhost2425210724.pdf') {
     return '2024-07-21'; // Hardcoded date for this specific URL
   }
+  if (url === 'http://www.ipu.ac.in/Pubinfo2024/nt020424231p%20(4).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020424231p%20(3).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020424231p%20(2).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020424231p%20(1).pdf') {
+    return '2024-08-02'; // Hardcoded date for these specific URL
+  }
+
+  if (url === 'http://www.ipu.ac.in/Pubinfo2024/nt020724431%20(6).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020724431%20(4).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020724431%20(3).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020724431%20(2).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020724431%20(1).pdf') {
+    return '2024-08-02'; // Hardcoded date for these specific URL
+  }
+
+  if (url === 'http://www.ipu.ac.in/Pubinfo2024/nt72605082411a.pdf') {
+    return '2024-08-05'; // Hardcoded date for this specific URL
+  }
 
   const patterns = [
     /(\d{2})(\d{2})(\d{2})(\d{3})/,  // Matches 200724401
