@@ -11,18 +11,18 @@ function extractDateFromUrl(url: string): string | null {
   if (url === 'http://www.ipu.ac.in/Pubinfo2024/formhost2425210724.pdf') {
     return '2024-07-21'; // Hardcoded date for this specific URL
   }
-  if (url === 'http://www.ipu.ac.in/Pubinfo2024/nt020424231p%20(4).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020424231p%20(3).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020424231p%20(2).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020424231p%20(1).pdf') {
+  if (url === 'http://www.ipu.ac.in/Pubinfo2024/nt020424231p (4).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020424231p (3).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020424231p (2).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020424231p (1).pdf') {
     return '2024-08-02'; // Hardcoded date for these specific URL
   }
 
-  if (url === 'http://www.ipu.ac.in/Pubinfo2024/nt020724431%20(6).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020724431%20(4).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020724431%20(3).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020724431%20(2).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020724431%20(1).pdf') {
+  if (url === 'http://www.ipu.ac.in/Pubinfo2024/nt020724431 (6).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020724431 (4).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020724431 (3).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020724431 (2).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020724431 (1).pdf') {
     return '2024-08-02'; // Hardcoded date for these specific URL
   }
 
   if (url === 'http://www.ipu.ac.in/Pubinfo2024/nt72605082411a.pdf') {
     return '2024-08-05'; // Hardcoded date for this specific URL
   }
-  if (url === 'http://www.ipu.ac.in/Pubinfo2024/nt0908431p%20(7).pdf') {
+  if (url === 'http://www.ipu.ac.in/Pubinfo2024/nt0908431p (7).pdf') {
     return '2024-08-09'; // Hardcoded date for this specific URL
   }
 
