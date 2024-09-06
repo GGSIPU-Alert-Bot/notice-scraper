@@ -73,6 +73,7 @@ function parseNotices(html: string): Notice[] {
   const $ = cheerio.load(html);
   const notices: Notice[] = [];
   const cutoffDate = new Date('2024-07-23');
+  const seenNotices = new Set<string>(); // To track unique notices
   let lastValidDate: string | null = null;
 
   $('table tr').each((index, element) => {
@@ -84,35 +85,49 @@ function parseNotices(html: string): Notice[] {
     if (noticeText && downloadUrl) {
       const fullUrl = downloadUrl.startsWith('http') ? downloadUrl : `http://www.ipu.ac.in${downloadUrl}`;
       const encodedUrl = encodeSpacesInURL(fullUrl);
-      const currentDate = new Date();
-      let extractedDate: string | null = null;
+      
+      // Create a unique key for this notice
+      const noticeKey = `${noticeText}|${encodedUrl}`;
 
-      // Only extract date from URL if it's before the cutoff date
-      if (currentDate <= cutoffDate) {
-        extractedDate = extractDateFromUrl(fullUrl);
+      // Only add the notice if we haven't seen it before
+      if (!seenNotices.has(noticeKey)) {
+        seenNotices.add(noticeKey);
+        
+        const createdAt = new Date();
+        let noticeDate: string;
 
-        if (!extractedDate) {
-          const textDateMatch = noticeText.match(/(\d{1,2})[\.-](\d{1,2})[\.-](\d{2,4})/);
-          if (textDateMatch) {
-            let [, day, month, year] = textDateMatch;
-            if (year.length === 2) year = `20${year}`;
-            if (isValidDate(day, month, year)) {
-              extractedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        if (createdAt <= cutoffDate) {
+          // Use URL date extraction for dates before or on July 23, 2024
+          noticeDate = extractDateFromUrl(fullUrl) || createdAt.toISOString().split('T')[0];
+          if (noticeDate === createdAt.toISOString().split('T')[0]) {
+            // If URL extraction failed, try extracting from text
+            const textDateMatch = noticeText.match(/(\d{1,2})[\.-](\d{1,2})[\.-](\d{2,4})/);
+            if (textDateMatch) {
+              let [, day, month, year] = textDateMatch;
+              if (year.length === 2) year = `20${year}`;
+              if (isValidDate(day, month, year)) {
+                noticeDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+              }
             }
           }
+        } else {
+          // Use createdAt for dates after July 23, 2024
+          noticeDate = createdAt.toISOString().split('T')[0];
         }
 
-        if (extractedDate) {
-          lastValidDate = extractedDate;
+        if (noticeDate !== 'Unknown') {
+          lastValidDate = noticeDate;
+        } else if (lastValidDate) {
+          noticeDate = lastValidDate;
         }
+
+        notices.push({
+          date: noticeDate,
+          title: noticeText,
+          url: encodedUrl,
+          createdAt: createdAt
+        });
       }
-
-      notices.push({
-        date: currentDate > cutoffDate ? currentDate.toISOString().split('T')[0] : (extractedDate || lastValidDate || 'Unknown'),
-        title: noticeText,
-        url: encodedUrl,
-        createdAt: currentDate
-      });
     }
   });
 
