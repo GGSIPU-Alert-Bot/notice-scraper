@@ -6,63 +6,78 @@ function encodeSpacesInURL(url: string): string {
   return url.replace(/ /g, '%20');
 }
 
-// function extractDateFromUrl(url: string): string | null {
-//   if (url === 'http://www.ipu.ac.in/Pubinfo2024/formhost2425210724.pdf') {
-//     return '2024-07-21'; // Hardcoded date for this specific URL
-//   }
+function extractDateFromUrl(url: string): string | null {
+  // Hardcoded date handling for the specific URL
+  if (url === 'http://www.ipu.ac.in/Pubinfo2024/formhost2425210724.pdf') {
+    return '2024-07-21'; // Hardcoded date for this specific URL
+  }
+  if (url === 'http://www.ipu.ac.in/Pubinfo2024/nt020424231p (4).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020424231p (3).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020424231p (2).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020424231p (1).pdf') {
+    return '2024-08-02'; // Hardcoded date for these specific URL
+  }
 
-//   const patterns = [
-//     /(\d{2})(\d{2})(\d{2})(\d{3})/,  // Matches 200724401
-//     /(\d{2})(\d{2})(\d{4})/,         // Matches 16072024
-//     /(\d{2})(\d{2})(\d{2})/,         // Matches 200724
-//     /[a-z]*(\d{2})(\d{2})(\d{2,4})/i, // Matches nt180724, circ1159130618, etc.
-//     /(\d{4})(\d{2})(\d{2})/,          // Matches 20240719 (e.g., formhost2425210724.pdf)
-//   ];
+  if (url === 'http://www.ipu.ac.in/Pubinfo2024/nt020724431 (6).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020724431 (4).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020724431 (3).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020724431 (2).pdf' || url === 'http://www.ipu.ac.in/Pubinfo2024/nt020724431 (1).pdf') {
+    return '2024-08-02'; // Hardcoded date for these specific URL
+  }
 
-//   for (const pattern of patterns) {
-//     const match = url.match(pattern);
-//     if (match) {
-//       let day, month, year;
-//       if (match[0].length === 8) {
-//         // Handle format like 200724 (YYMMDD)
-//         [, year, month, day] = match;
-//         year = `20${year}`;
-//       } else if (match[0].length === 9) {
-//         // Handle format like 200724401 (YYMMDD###)
-//         [, day, month, year] = match;
-//         year = `20${year}`;
-//       } else if (match[0].length === 10) {
-//         // Handle format like 20240719 (YYYYMMDD)
-//         [, year, month, day] = match;
-//       } else {
-//         [, day, month, year] = match;
-//         if (year.length === 2) {
-//           year = `20${year}`;
-//         }
-//       }
+  if (url === 'http://www.ipu.ac.in/Pubinfo2024/nt72605082411a.pdf') {
+    return '2024-08-05'; // Hardcoded date for this specific URL
+  }
+  if (url === 'http://www.ipu.ac.in/Pubinfo2024/nt0908431p (7).pdf') {
+    return '2024-08-09'; // Hardcoded date for this specific URL
+  }
 
-//       // Convert the extracted year, month, day to 'YYYY-MM-DD' format
-//       if (isValidDate(day, month, year)) {
-//         return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-//       }
-//     }
-//   }
+  const patterns = [
+    /(\d{2})(\d{2})(\d{2})(\d{3})/,  // Matches 200724401
+    /(\d{2})(\d{2})(\d{4})/,         // Matches 16072024
+    /(\d{2})(\d{2})(\d{2})/,         // Matches 200724
+    /[a-z]*(\d{2})(\d{2})(\d{2,4})/i, // Matches nt180724, circ1159130618, etc.
+    /(\d{4})(\d{2})(\d{2})/,          // Matches 20240719 (e.g., formhost2425210724.pdf)
+  ];
 
-//   return null;
-// }
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) {
+      let day, month, year;
+      if (match[0].length === 8) {
+        // Handle format like 200724 (YYMMDD)
+        [, year, month, day] = match;
+        year = `20${year}`;
+      } else if (match[0].length === 9) {
+        // Handle format like 200724401 (YYMMDD###)
+        [, day, month, year] = match;
+        year = `20${year}`;
+      } else if (match[0].length === 10) {
+        // Handle format like 20240719 (YYYYMMDD)
+        [, year, month, day] = match;
+      } else {
+        [, day, month, year] = match;
+        if (year.length === 2) {
+          year = `20${year}`;
+        }
+      }
 
-// function isValidDate(day: string, month: string, year: string): boolean {
-//   const d = parseInt(day, 10);
-//   const m = parseInt(month, 10);
-//   const y = parseInt(year, 10);
+      // Convert the extracted year, month, day to 'YYYY-MM-DD' format
+      if (isValidDate(day, month, year)) {
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+    }
+  }
+
+  return null;
+}
+
+function isValidDate(day: string, month: string, year: string): boolean {
+  const d = parseInt(day, 10);
+  const m = parseInt(month, 10);
+  const y = parseInt(year, 10);
   
-//   const date = new Date(y, m - 1, d);
-//   return date.getFullYear() === y && 
-//          date.getMonth() === m - 1 && 
-//          date.getDate() === d && 
-//          y >= 2018 && 
-//          y <= new Date().getFullYear();
-// }
+  const date = new Date(y, m - 1, d);
+  return date.getFullYear() === y && 
+         date.getMonth() === m - 1 && 
+         date.getDate() === d && 
+         y >= 2018 && 
+         y <= new Date().getFullYear();
+}
 
 async function fetchNoticesHtml(url: string): Promise<string> {
   const response = await axios.get(url);
@@ -72,7 +87,7 @@ async function fetchNoticesHtml(url: string): Promise<string> {
 function parseNotices(html: string): Notice[] {
   const $ = cheerio.load(html);
   const notices: Notice[] = [];
-  const seenNotices = new Set<string>(); // To track unique notices
+  let lastValidDate: string | null = null;
 
   $('table tr').each((index, element) => {
     const $td = $(element).find('td').first();
@@ -82,29 +97,61 @@ function parseNotices(html: string): Notice[] {
 
     if (noticeText && downloadUrl) {
       const fullUrl = downloadUrl.startsWith('http') ? downloadUrl : `http://www.ipu.ac.in${downloadUrl}`;
-      const encodedUrl = encodeSpacesInURL(fullUrl);
-      
-      // Create a unique key for this notice
-      const noticeKey = `${noticeText}|${encodedUrl}`;
+      const encodedUrl = encodeSpacesInURL(fullUrl);  // Encode spaces in the full URL
+      let extractedDate = extractDateFromUrl(fullUrl);
 
-      // Only add the notice if we haven't seen it before
-      if (!seenNotices.has(noticeKey)) {
-        seenNotices.add(noticeKey);
-        
-        const createdAt = new Date();
-        const noticeDate = createdAt.toISOString().split('T')[0]; // Extract date from createdAt
-
-        notices.push({
-          date: noticeDate,
-          title: noticeText,
-          url: encodedUrl,
-          createdAt: createdAt
-        });
+      if (encodedUrl.includes('youtube.com') || encodedUrl.includes('youtu.be')) {
+        extractedDate = lastValidDate;
+      } else if (extractedDate) {
+        lastValidDate = extractedDate;
       }
+
+      if (!extractedDate) {
+        const textDateMatch = noticeText.match(/(\d{1,2})[\.-](\d{1,2})[\.-](\d{2,4})/);
+        if (textDateMatch) {
+          let [, day, month, year] = textDateMatch;
+          if (year.length === 2) year = `20${year}`;
+          if (isValidDate(day, month, year)) {
+            extractedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+          }
+        }
+      }
+
+      notices.push({
+        date: extractedDate || lastValidDate || 'Unknown',
+        title: noticeText,
+        url: encodedUrl
+      });
     }
   });
 
+  fillUnknownDates(notices);
+
   return notices;
+}
+
+function fillUnknownDates(notices: Notice[]): void {
+  for (let i = 0; i < notices.length; i++) {
+    if (notices[i].date === 'Unknown' && (notices[i].url.includes('youtube.com') || notices[i].url.includes('youtu.be'))) {
+      for (let j = i + 1; j < notices.length; j++) {
+        if (notices[j].date !== 'Unknown') {
+          notices[i].date = notices[j].date;
+          break;
+        }
+      }
+    }
+  }
+
+  for (let i = notices.length - 1; i >= 0; i--) {
+    if (notices[i].date === 'Unknown') {
+      for (let j = i - 1; j >= 0; j--) {
+        if (notices[j].date !== 'Unknown') {
+          notices[i].date = notices[j].date;
+          break;
+        }
+      }
+    }
+  }
 }
 
 export async function scrapNotices(): Promise<Notice[]> {
