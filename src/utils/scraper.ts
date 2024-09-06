@@ -120,14 +120,28 @@ function parseNotices(html: string): Notice[] {
       notices.push({
         date: extractedDate || lastValidDate || 'Unknown',
         title: noticeText,
-        url: encodedUrl
+        url: encodedUrl,
+        createdAt: new Date()
       });
     }
   });
 
   fillUnknownDates(notices);
+  adjustDatesAfterCutoff(notices);
 
   return notices;
+}
+
+function adjustDatesAfterCutoff(notices: Notice[]): void {
+  const cutoffDate = new Date('2024-07-23');
+  notices.forEach(notice => {
+    if (notice.date !== 'Unknown') {
+      const noticeDate = new Date(notice.date);
+      if (noticeDate > cutoffDate && notice.createdAt) {
+        notice.date = notice.createdAt.toISOString().split('T')[0];
+      }
+    }
+  });
 }
 
 function fillUnknownDates(notices: Notice[]): void {
