@@ -6,63 +6,63 @@ function encodeSpacesInURL(url: string): string {
   return url.replace(/ /g, '%20');
 }
 
-function extractDateFromUrl(url: string): string | null {
-  if (url === 'http://www.ipu.ac.in/Pubinfo2024/formhost2425210724.pdf') {
-    return '2024-07-21'; // Hardcoded date for this specific URL
-  }
+// function extractDateFromUrl(url: string): string | null {
+//   if (url === 'http://www.ipu.ac.in/Pubinfo2024/formhost2425210724.pdf') {
+//     return '2024-07-21'; // Hardcoded date for this specific URL
+//   }
 
-  const patterns = [
-    /(\d{2})(\d{2})(\d{2})(\d{3})/,  // Matches 200724401
-    /(\d{2})(\d{2})(\d{4})/,         // Matches 16072024
-    /(\d{2})(\d{2})(\d{2})/,         // Matches 200724
-    /[a-z]*(\d{2})(\d{2})(\d{2,4})/i, // Matches nt180724, circ1159130618, etc.
-    /(\d{4})(\d{2})(\d{2})/,          // Matches 20240719 (e.g., formhost2425210724.pdf)
-  ];
+//   const patterns = [
+//     /(\d{2})(\d{2})(\d{2})(\d{3})/,  // Matches 200724401
+//     /(\d{2})(\d{2})(\d{4})/,         // Matches 16072024
+//     /(\d{2})(\d{2})(\d{2})/,         // Matches 200724
+//     /[a-z]*(\d{2})(\d{2})(\d{2,4})/i, // Matches nt180724, circ1159130618, etc.
+//     /(\d{4})(\d{2})(\d{2})/,          // Matches 20240719 (e.g., formhost2425210724.pdf)
+//   ];
 
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match) {
-      let day, month, year;
-      if (match[0].length === 8) {
-        // Handle format like 200724 (YYMMDD)
-        [, year, month, day] = match;
-        year = `20${year}`;
-      } else if (match[0].length === 9) {
-        // Handle format like 200724401 (YYMMDD###)
-        [, day, month, year] = match;
-        year = `20${year}`;
-      } else if (match[0].length === 10) {
-        // Handle format like 20240719 (YYYYMMDD)
-        [, year, month, day] = match;
-      } else {
-        [, day, month, year] = match;
-        if (year.length === 2) {
-          year = `20${year}`;
-        }
-      }
+//   for (const pattern of patterns) {
+//     const match = url.match(pattern);
+//     if (match) {
+//       let day, month, year;
+//       if (match[0].length === 8) {
+//         // Handle format like 200724 (YYMMDD)
+//         [, year, month, day] = match;
+//         year = `20${year}`;
+//       } else if (match[0].length === 9) {
+//         // Handle format like 200724401 (YYMMDD###)
+//         [, day, month, year] = match;
+//         year = `20${year}`;
+//       } else if (match[0].length === 10) {
+//         // Handle format like 20240719 (YYYYMMDD)
+//         [, year, month, day] = match;
+//       } else {
+//         [, day, month, year] = match;
+//         if (year.length === 2) {
+//           year = `20${year}`;
+//         }
+//       }
 
-      // Convert the extracted year, month, day to 'YYYY-MM-DD' format
-      if (isValidDate(day, month, year)) {
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-      }
-    }
-  }
+//       // Convert the extracted year, month, day to 'YYYY-MM-DD' format
+//       if (isValidDate(day, month, year)) {
+//         return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+//       }
+//     }
+//   }
 
-  return null;
-}
+//   return null;
+// }
 
-function isValidDate(day: string, month: string, year: string): boolean {
-  const d = parseInt(day, 10);
-  const m = parseInt(month, 10);
-  const y = parseInt(year, 10);
+// function isValidDate(day: string, month: string, year: string): boolean {
+//   const d = parseInt(day, 10);
+//   const m = parseInt(month, 10);
+//   const y = parseInt(year, 10);
   
-  const date = new Date(y, m - 1, d);
-  return date.getFullYear() === y && 
-         date.getMonth() === m - 1 && 
-         date.getDate() === d && 
-         y >= 2018 && 
-         y <= new Date().getFullYear();
-}
+//   const date = new Date(y, m - 1, d);
+//   return date.getFullYear() === y && 
+//          date.getMonth() === m - 1 && 
+//          date.getDate() === d && 
+//          y >= 2018 && 
+//          y <= new Date().getFullYear();
+// }
 
 async function fetchNoticesHtml(url: string): Promise<string> {
   const response = await axios.get(url);
@@ -72,9 +72,7 @@ async function fetchNoticesHtml(url: string): Promise<string> {
 function parseNotices(html: string): Notice[] {
   const $ = cheerio.load(html);
   const notices: Notice[] = [];
-  const cutoffDate = new Date('2024-07-23');
   const seenNotices = new Set<string>(); // To track unique notices
-  let lastValidDate: string | null = null;
 
   $('table tr').each((index, element) => {
     const $td = $(element).find('td').first();
@@ -94,32 +92,7 @@ function parseNotices(html: string): Notice[] {
         seenNotices.add(noticeKey);
         
         const createdAt = new Date();
-        let noticeDate: string;
-
-        if (createdAt <= cutoffDate) {
-          // Use URL date extraction for dates before or on July 23, 2024
-          noticeDate = extractDateFromUrl(fullUrl) || createdAt.toISOString().split('T')[0];
-          if (noticeDate === createdAt.toISOString().split('T')[0]) {
-            // If URL extraction failed, try extracting from text
-            const textDateMatch = noticeText.match(/(\d{1,2})[\.-](\d{1,2})[\.-](\d{2,4})/);
-            if (textDateMatch) {
-              let [, day, month, year] = textDateMatch;
-              if (year.length === 2) year = `20${year}`;
-              if (isValidDate(day, month, year)) {
-                noticeDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-              }
-            }
-          }
-        } else {
-          // Use createdAt for dates after July 23, 2024
-          noticeDate = createdAt.toISOString().split('T')[0];
-        }
-
-        if (noticeDate !== 'Unknown') {
-          lastValidDate = noticeDate;
-        } else if (lastValidDate) {
-          noticeDate = lastValidDate;
-        }
+        const noticeDate = createdAt.toISOString().split('T')[0]; // Extract date from createdAt
 
         notices.push({
           date: noticeDate,
@@ -131,32 +104,7 @@ function parseNotices(html: string): Notice[] {
     }
   });
 
-  fillUnknownDates(notices);
-
   return notices;
-}
-
-function fillUnknownDates(notices: Notice[]): void {
-  let lastKnownDate: string | null = null;
-
-  // Forward pass
-  for (const notice of notices) {
-    if (notice.date !== 'Unknown') {
-      lastKnownDate = notice.date;
-    } else if (lastKnownDate) {
-      notice.date = lastKnownDate;
-    }
-  }
-
-  // Backward pass for any remaining unknowns
-  lastKnownDate = null;
-  for (let i = notices.length - 1; i >= 0; i--) {
-    if (notices[i].date !== 'Unknown') {
-      lastKnownDate = notices[i].date;
-    } else if (lastKnownDate) {
-      notices[i].date = lastKnownDate;
-    }
-  }
 }
 
 export async function scrapNotices(): Promise<Notice[]> {
