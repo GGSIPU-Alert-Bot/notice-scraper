@@ -44,3 +44,19 @@ function filterNewOrUpdatedNotices(scrapedNotices: Notice[], recentDbNotices: No
     return !dbNoticeSet.has(noticeKey);
   });
 }
+
+
+
+// export async function sendUpdateNotification(update: UpdateNotification) {
+//   try {
+//     const response = await axios.post(NOTIFICATION_SERVER_URL, update);
+//     if (response.status === 200) {
+//       console.log(`Notification sent successfully for update: ${update.id}`);
+//     } else {
+//       console.error(`Failed to send notification for update: ${update.id}`);
+//     }
+//   } catch (error) {
+//     console.error(`Error sending notification for update: ${update.id}`, error);
+//     throw error;
+//   }
+// }

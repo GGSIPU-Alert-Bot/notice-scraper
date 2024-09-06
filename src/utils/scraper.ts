@@ -72,6 +72,7 @@ async function fetchNoticesHtml(url: string): Promise<string> {
 function parseNotices(html: string): Notice[] {
   const $ = cheerio.load(html);
   const notices: Notice[] = [];
+  const cutoffDate = new Date('2024-07-23');
   let lastValidDate: string | null = null;
 
   $('table tr').each((index, element) => {
@@ -82,73 +83,63 @@ function parseNotices(html: string): Notice[] {
 
     if (noticeText && downloadUrl) {
       const fullUrl = downloadUrl.startsWith('http') ? downloadUrl : `http://www.ipu.ac.in${downloadUrl}`;
-      const encodedUrl = encodeSpacesInURL(fullUrl);  // Encode spaces in the full URL
-      let extractedDate = extractDateFromUrl(fullUrl);
+      const encodedUrl = encodeSpacesInURL(fullUrl);
+      const currentDate = new Date();
+      let extractedDate: string | null = null;
 
-      if (encodedUrl.includes('youtube.com') || encodedUrl.includes('youtu.be')) {
-        extractedDate = lastValidDate;
-      } else if (extractedDate) {
-        lastValidDate = extractedDate;
-      }
+      // Only extract date from URL if it's before the cutoff date
+      if (currentDate <= cutoffDate) {
+        extractedDate = extractDateFromUrl(fullUrl);
 
-      if (!extractedDate) {
-        const textDateMatch = noticeText.match(/(\d{1,2})[\.-](\d{1,2})[\.-](\d{2,4})/);
-        if (textDateMatch) {
-          let [, day, month, year] = textDateMatch;
-          if (year.length === 2) year = `20${year}`;
-          if (isValidDate(day, month, year)) {
-            extractedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        if (!extractedDate) {
+          const textDateMatch = noticeText.match(/(\d{1,2})[\.-](\d{1,2})[\.-](\d{2,4})/);
+          if (textDateMatch) {
+            let [, day, month, year] = textDateMatch;
+            if (year.length === 2) year = `20${year}`;
+            if (isValidDate(day, month, year)) {
+              extractedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            }
           }
+        }
+
+        if (extractedDate) {
+          lastValidDate = extractedDate;
         }
       }
 
       notices.push({
-        date: extractedDate || lastValidDate || 'Unknown',
+        date: currentDate > cutoffDate ? currentDate.toISOString().split('T')[0] : (extractedDate || lastValidDate || 'Unknown'),
         title: noticeText,
         url: encodedUrl,
-        createdAt: new Date()
+        createdAt: currentDate
       });
     }
   });
 
   fillUnknownDates(notices);
-  adjustDatesAfterCutoff(notices);
 
   return notices;
 }
 
-function adjustDatesAfterCutoff(notices: Notice[]): void {
-  const cutoffDate = new Date('2024-07-23');
-  notices.forEach(notice => {
-    if (notice.date !== 'Unknown') {
-      const noticeDate = new Date(notice.date);
-      if (noticeDate > cutoffDate && notice.createdAt) {
-        notice.date = notice.createdAt.toISOString().split('T')[0];
-      }
-    }
-  });
-}
-
 function fillUnknownDates(notices: Notice[]): void {
-  for (let i = 0; i < notices.length; i++) {
-    if (notices[i].date === 'Unknown' && (notices[i].url.includes('youtube.com') || notices[i].url.includes('youtu.be'))) {
-      for (let j = i + 1; j < notices.length; j++) {
-        if (notices[j].date !== 'Unknown') {
-          notices[i].date = notices[j].date;
-          break;
-        }
-      }
+  let lastKnownDate: string | null = null;
+
+  // Forward pass
+  for (const notice of notices) {
+    if (notice.date !== 'Unknown') {
+      lastKnownDate = notice.date;
+    } else if (lastKnownDate) {
+      notice.date = lastKnownDate;
     }
   }
 
+  // Backward pass for any remaining unknowns
+  lastKnownDate = null;
   for (let i = notices.length - 1; i >= 0; i--) {
-    if (notices[i].date === 'Unknown') {
-      for (let j = i - 1; j >= 0; j--) {
-        if (notices[j].date !== 'Unknown') {
-          notices[i].date = notices[j].date;
-          break;
-        }
-      }
+    if (notices[i].date !== 'Unknown') {
+      lastKnownDate = notices[i].date;
+    } else if (lastKnownDate) {
+      notices[i].date = lastKnownDate;
     }
   }
 }
