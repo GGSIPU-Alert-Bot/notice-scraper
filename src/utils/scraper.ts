@@ -25,6 +25,9 @@ function extractDateFromUrl(url: string): string | null {
   if (url === 'http://www.ipu.ac.in/Pubinfo2024/nt0908431p (7).pdf') {
     return '2024-08-09'; // Hardcoded date for this specific URL
   }
+  if (url === 'http://www.ipu.ac.in/Pubinfo2024/ntAPARMTS0912241230.pdf') {
+    return '2024-10-09'; // Hardcoded date for this specific URL
+  }
 
   const patterns = [
     /(\d{2})(\d{2})(\d{2})(\d{3})/,  // Matches 200724401
